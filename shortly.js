@@ -23,24 +23,46 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static(__dirname + '/public'));
 
 
-app.get('/', 
+app.get('/',
 function(req, res) {
   res.render('index');
 });
 
-app.get('/create', 
+app.get('/create',
 function(req, res) {
   res.render('index');
 });
 
-app.get('/links', 
+app.get('/login', function(req, res) {
+  res.render('login');
+});
+
+app.post('/login', function(req, res) {
+  var username = req.body.username;
+  var password = req.body.password;
+
+//In create account template, checks if username exists, if not, creates a new record.
+  new User({'username': username})
+  .fetch()
+  .then(function(user) {
+    if (!user) {
+      User.forge({'username': username, 'password': password}).save();
+    } else {
+        // console.log('Successfully created username: ' + username);
+      console.log('Username already exists!');
+    }
+  });
+
+});
+
+app.get('/links',
 function(req, res) {
   Links.reset().fetch().then(function(links) {
     res.send(200, links.models);
   });
 });
 
-app.post('/links', 
+app.post('/links',
 function(req, res) {
   var uri = req.body.url;
 
@@ -77,6 +99,11 @@ function(req, res) {
 /************************************************************/
 // Write your authentication routes here
 /************************************************************/
+
+
+app.post('/newuser', function(req, res) {
+  var username = req.body.username;
+});
 
 
 
