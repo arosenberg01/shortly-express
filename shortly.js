@@ -41,17 +41,51 @@ app.post('/login', function(req, res) {
   var username = req.body.username;
   var password = req.body.password;
 
+  new User({'username': username})
+  .fetch()
+  .then(function(user) {
+    if (user) {
+      console.log(user);
+      user[0].compareHash(password, function(isMatching) {
+        if (isMatching) {
+          console.log('LOGGED IN, UR PASSWORD MATCHES OUR HASHED VERSION')
+        } else {
+          console.log('REDIRECT TO CREATE USER PAGE BECAUSE YOUR PASS DOESNT MATCH!')
+        }
+      })
+    } else {
+        // console.log('Successfully created username: ' + username);
+      console.log('Username doesnt exists!');
+    }
+  });
+
+});
+
+app.get('/signup', function(req, res) {
+  res.render('signup');
+});
+
+app.post('/signup', function(req, res) {
+  var username = req.body.username;
+  var password = req.body.password;
+
 //In create account template, checks if username exists, if not, creates a new record.
   new User({'username': username})
   .fetch()
   .then(function(user) {
     if (!user) {
-      User.forge({'username': username, 'password': password}).save();
+      User.forge({'username': username, 'password': password}).save()
+      .then(function(){
+        console.log('New user successfully created!');
+        res.redirect(301,'/login');
+      });
+
     } else {
         // console.log('Successfully created username: ' + username);
       console.log('Username already exists!');
     }
   });
+
 
 });
 

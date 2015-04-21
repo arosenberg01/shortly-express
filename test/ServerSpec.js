@@ -13,11 +13,11 @@ var Link = require('../app/models/link');
 // Remove the 'x' from beforeEach block when working on
 // authentication tests.
 /************************************************************/
-var xbeforeEach = function(){};
+var beforeEach = function(){};
 /************************************************************/
 
 
-describe('', function() {
+describe('First set of tests', function() {
 
   beforeEach(function() {
     // log out currently signed in user
