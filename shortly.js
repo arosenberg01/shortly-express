@@ -1,4 +1,5 @@
 var express = require('express');
+var expressSession = require('express-session');
 var util = require('./lib/utility');
 var partials = require('express-partials');
 var bodyParser = require('body-parser');
@@ -21,8 +22,16 @@ app.use(partials());
 app.use(bodyParser.json());
 // Parse forms (signup/login)
 app.use(bodyParser.urlencoded({ extended: true }));
+app.use(express.cookieParser());
+
 app.use(express.static(__dirname + '/public'));
 
+app.use(express.session({
+  genid: function(req) {
+    return genuuid()
+  },
+  secret: 'leroy jenkins'
+}));
 
 app.get('/',
 function(req, res) {
@@ -47,21 +56,13 @@ app.post('/login', function(req, res) {
   .fetch()
   .then(function(user) {
     if (user) {
-      console.log('Returned user: ')
-      console.log(user);
-
       var hash = user.attributes.password;
-      console.log('retrieved hash', hash);
       var result = bcrypt.compareSync(password, hash);
-      console.log(result);
-      // bcrypt.compare(password, hash, function(err, res){
-      //   if (err) {
-      //     throw err;
-      //   } else {
-      //     console.log('True of false?', res);
-      //     // callback(res);
-      //   }
-      // });
+      if (result) {
+        console.log('Logged in as:', user.attributes.username);
+        res.redirect(301,'/');
+      }
+
 
     } else {
         // console.log('Successfully created username: ' + username);
