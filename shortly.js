@@ -53,13 +53,13 @@ function(req, res) {
   if (!sess.username) {
     res.redirect(301,'/login');
   }
-  console.log('sess.username: ',sess.username)
+  // console.log('sess.username: ',sess.username)
   res.render('index');
 });
 
 app.get('/login', function(req, res) {
     sess = req.session;
-  console.log('sess.username: ',sess.username)
+  // console.log('sess.username: ',sess.username)
   res.render('login');
 });
 
@@ -68,7 +68,7 @@ app.post('/login', function(req, res) {
   var password = req.body.password;
   console.log('password', password);
     sess = req.session;
-  console.log('sess.username: ',sess.username)
+  // console.log('sess.username: ',sess.username)
 
   new User({'username': username})
   .fetch()
@@ -132,16 +132,19 @@ function(req, res) {
       res.redirect(301,'/login');
     }
 
-  console.log('sess.username: ',sess.username)
-  Links.reset().fetch().then(function(links) {
-    res.send(200, links.models);
-  });
+    new User({username: sess.username}).fetch().then(function(user) {
+      var userId = user.attributes.id;
+
+      Links.reset().query({where: {user_id: userId}}).fetch().then(function(links) {
+        res.send(200, links.models);
+      });
+    });
 });
 
 app.post('/links',
 function(req, res) {
     sess = req.session;
-  console.log('sess.username: ',sess.username);
+  // console.log('sess.username: ',sess.username);
   var uri = req.body.url;
 
   if (!util.isValidUrl(uri)) {
@@ -158,17 +161,22 @@ function(req, res) {
           console.log('Error reading URL heading: ', err);
           return res.send(404);
         }
+          new User({username: sess.username}).fetch().then(function(user) {
+            var userId = user.attributes.id;
 
-        var link = new Link({
-          url: uri,
-          title: title,
-          base_url: req.headers.origin
-        });
+            var link = new Link({
+              url: uri,
+              title: title,
+              base_url: req.headers.origin,
+              user_id: userId
+            });
 
-        link.save().then(function(newLink) {
-          Links.add(newLink);
-          res.send(200, newLink);
-        });
+            link.save().then(function(newLink) {
+              Links.add(newLink);
+              res.send(200, newLink);
+            });
+          })
+
       });
     }
   });
