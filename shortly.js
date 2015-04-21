@@ -2,6 +2,7 @@ var express = require('express');
 var util = require('./lib/utility');
 var partials = require('express-partials');
 var bodyParser = require('body-parser');
+var bcrypt = require('bcrypt-nodejs');
 
 
 var db = require('./app/config');
@@ -40,19 +41,28 @@ app.get('/login', function(req, res) {
 app.post('/login', function(req, res) {
   var username = req.body.username;
   var password = req.body.password;
+  console.log('password', password);
 
   new User({'username': username})
   .fetch()
   .then(function(user) {
     if (user) {
+      console.log('Returned user: ')
       console.log(user);
-      user[0].compareHash(password, function(isMatching) {
-        if (isMatching) {
-          console.log('LOGGED IN, UR PASSWORD MATCHES OUR HASHED VERSION')
-        } else {
-          console.log('REDIRECT TO CREATE USER PAGE BECAUSE YOUR PASS DOESNT MATCH!')
-        }
-      })
+
+      var hash = user.attributes.password;
+      console.log('retrieved hash', hash);
+      var result = bcrypt.compareSync(password, hash);
+      console.log(result);
+      // bcrypt.compare(password, hash, function(err, res){
+      //   if (err) {
+      //     throw err;
+      //   } else {
+      //     console.log('True of false?', res);
+      //     // callback(res);
+      //   }
+      // });
+
     } else {
         // console.log('Successfully created username: ' + username);
       console.log('Username doesnt exists!');

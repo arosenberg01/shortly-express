@@ -25,17 +25,10 @@ var User = db.Model.extend({
         //   }
         // });
     });
+
   },
 
   compareHash: function(password, callback) {
-    var hash = model.get('password');
-    bcrypt.compare(password, hash, function(err, res){
-      if (err) {
-        throw err;
-      } else {
-        callback(res);
-      }
-    });
   }
 
 });
