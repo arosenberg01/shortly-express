@@ -1,5 +1,5 @@
 var express = require('express');
-var expressSession = require('express-session');
+var session = require('express-session');
 var util = require('./lib/utility');
 var partials = require('express-partials');
 var bodyParser = require('body-parser');
@@ -22,28 +22,44 @@ app.use(partials());
 app.use(bodyParser.json());
 // Parse forms (signup/login)
 app.use(bodyParser.urlencoded({ extended: true }));
-app.use(express.cookieParser());
+// app.use(express.cookieParser());
 
 app.use(express.static(__dirname + '/public'));
 
-app.use(express.session({
-  genid: function(req) {
-    return genuuid()
-  },
-  secret: 'leroy jenkins'
+var sess;
+
+app.use(session({
+  // genid: function(req) {
+  //   return genuuid()
+  // },
+  secret: 'leroy jenkins',
+  saveUninitialized: true,
+  resave: false
 }));
 
 app.get('/',
 function(req, res) {
+  sess = req.session;
+  // console.log('sess.username: ',sess.username)
+  if (!sess.username) {
+    res.redirect(301,'/login');
+  }
   res.render('index');
 });
 
 app.get('/create',
 function(req, res) {
+  sess = req.session;
+  if (!sess.username) {
+    res.redirect(301,'/login');
+  }
+  console.log('sess.username: ',sess.username)
   res.render('index');
 });
 
 app.get('/login', function(req, res) {
+    sess = req.session;
+  console.log('sess.username: ',sess.username)
   res.render('login');
 });
 
@@ -51,6 +67,8 @@ app.post('/login', function(req, res) {
   var username = req.body.username;
   var password = req.body.password;
   console.log('password', password);
+    sess = req.session;
+  console.log('sess.username: ',sess.username)
 
   new User({'username': username})
   .fetch()
@@ -60,6 +78,7 @@ app.post('/login', function(req, res) {
       var result = bcrypt.compareSync(password, hash);
       if (result) {
         console.log('Logged in as:', user.attributes.username);
+        sess.username = req.body.username;
         res.redirect(301,'/');
       }
 
@@ -67,18 +86,23 @@ app.post('/login', function(req, res) {
     } else {
         // console.log('Successfully created username: ' + username);
       console.log('Username doesnt exists!');
+      res.redirect(301,'/login');
     }
   });
 
 });
 
 app.get('/signup', function(req, res) {
+    sess = req.session;
+  console.log('sess.username: ',sess.username)
   res.render('signup');
 });
 
 app.post('/signup', function(req, res) {
   var username = req.body.username;
   var password = req.body.password;
+    sess = req.session;
+  console.log('sess.username: ',sess.username)
 
 //In create account template, checks if username exists, if not, creates a new record.
   new User({'username': username})
@@ -88,7 +112,8 @@ app.post('/signup', function(req, res) {
       User.forge({'username': username, 'password': password}).save()
       .then(function(){
         console.log('New user successfully created!');
-        res.redirect(301,'/login');
+        sess.username = username;
+        res.redirect(301,'/');
       });
 
     } else {
@@ -102,6 +127,12 @@ app.post('/signup', function(req, res) {
 
 app.get('/links',
 function(req, res) {
+    sess = req.session;
+    if (!sess.username) {
+      res.redirect(301,'/login');
+    }
+
+  console.log('sess.username: ',sess.username)
   Links.reset().fetch().then(function(links) {
     res.send(200, links.models);
   });
@@ -109,6 +140,8 @@ function(req, res) {
 
 app.post('/links',
 function(req, res) {
+    sess = req.session;
+  console.log('sess.username: ',sess.username);
   var uri = req.body.url;
 
   if (!util.isValidUrl(uri)) {
@@ -146,9 +179,9 @@ function(req, res) {
 /************************************************************/
 
 
-app.post('/newuser', function(req, res) {
-  var username = req.body.username;
-});
+var checkAuth = function() {
+
+};
 
 
 
