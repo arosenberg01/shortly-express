@@ -47,6 +47,12 @@ function(req, res) {
   res.render('index');
 });
 
+app.get('/logout',
+  function(req, res) {
+    req.session.destroy();
+    res.redirect(301,'/login');
+})
+
 app.get('/create',
 function(req, res) {
   sess = req.session;
@@ -66,9 +72,7 @@ app.get('/login', function(req, res) {
 app.post('/login', function(req, res) {
   var username = req.body.username;
   var password = req.body.password;
-  console.log('password', password);
-    sess = req.session;
-  // console.log('sess.username: ',sess.username)
+  sess = req.session;
 
   new User({'username': username})
   .fetch()
@@ -80,16 +84,15 @@ app.post('/login', function(req, res) {
         console.log('Logged in as:', user.attributes.username);
         sess.username = req.body.username;
         res.redirect(301,'/');
+      } else {
+        console.log('Incorrect password!');
+        res.redirect(301,'/login');
       }
-
-
     } else {
-        // console.log('Successfully created username: ' + username);
       console.log('Username doesnt exists!');
       res.redirect(301,'/login');
     }
   });
-
 });
 
 app.get('/signup', function(req, res) {
@@ -101,8 +104,7 @@ app.get('/signup', function(req, res) {
 app.post('/signup', function(req, res) {
   var username = req.body.username;
   var password = req.body.password;
-    sess = req.session;
-  console.log('sess.username: ',sess.username)
+  sess = req.session;
 
 //In create account template, checks if username exists, if not, creates a new record.
   new User({'username': username})
@@ -115,14 +117,10 @@ app.post('/signup', function(req, res) {
         sess.username = username;
         res.redirect(301,'/');
       });
-
     } else {
-        // console.log('Successfully created username: ' + username);
       console.log('Username already exists!');
     }
   });
-
-
 });
 
 app.get('/links',
@@ -143,8 +141,7 @@ function(req, res) {
 
 app.post('/links',
 function(req, res) {
-    sess = req.session;
-  // console.log('sess.username: ',sess.username);
+  sess = req.session;
   var uri = req.body.url;
 
   if (!util.isValidUrl(uri)) {
